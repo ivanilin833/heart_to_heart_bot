@@ -25,3 +25,4 @@ COPY --from=builder /app/target/heartToHeartBot-0.0.1-SNAPSHOT.jar ./app.jar
 
 # Укажите команду для запуска приложения
 CMD ["app.jar"]
+EXPOSE 1011
