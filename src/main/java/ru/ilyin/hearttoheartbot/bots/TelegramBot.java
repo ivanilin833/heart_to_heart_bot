@@ -1,11 +1,13 @@
 package ru.ilyin.hearttoheartbot.bots;
 
 import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
 import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeDefault;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -16,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 public class TelegramBot extends TelegramLongPollingBot {
     private final BotProperties botProperties;
     private final MessageHandler messageHandler;
@@ -35,6 +38,7 @@ public class TelegramBot extends TelegramLongPollingBot {
     @Override
     public void onUpdateReceived(Update update) {
         if (update.hasMessage() && update.getMessage().hasText()) {
+            User from = update.getMessage().getFrom();
             Long chatId = update.getMessage().getChatId();
             String message = update.getMessage().getText();
             // я определил что это команда или верну дефолт
@@ -42,13 +46,13 @@ public class TelegramBot extends TelegramLongPollingBot {
                 // теперь мне надо определить какая это команда
                 String response = messageHandler.handleMessage(chatId, message);
                 if (!response.isEmpty()) {
-                    sendMessage(chatId, response);
+                    sendMessage(chatId, response, from, message);
                 }
             } else {
                 String state = awaitingCommand.getOrDefault(chatId, null);
                 if (state == null || state.isEmpty()) {
                     String response = messageHandler.handleMessage(chatId, "/help");
-                    sendMessage(chatId, response);
+                    sendMessage(chatId, response, from, message);
                     return;
                 }
                 ChatClient client = promptToChat.get(state);
@@ -59,7 +63,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                         )
                         .call()
                         .content();
-                sendMessage(chatId, content);
+                sendMessage(chatId, content, from, message);
             }
         }
     }
@@ -94,8 +98,9 @@ public class TelegramBot extends TelegramLongPollingBot {
         return botProperties.getBotUsername();
     }
 
-    private void sendMessage(Long chatId, String text) {
+    private void sendMessage(Long chatId, String text, User user, String message) {
         try {
+            log.info("{} отправил {} и получил ответ {}", user, message, text);
             execute(new SendMessage(String.valueOf(chatId), text));
         } catch (TelegramApiException e) {
             e.printStackTrace();

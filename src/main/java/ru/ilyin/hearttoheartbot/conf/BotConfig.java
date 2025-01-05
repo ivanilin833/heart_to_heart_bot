@@ -45,8 +45,7 @@ public class BotConfig {
             ChatClient client = builder
                     .defaultSystem(key)
                     .defaultAdvisors(
-                            new MessageChatMemoryAdvisor(chatMemorySupplier().get(), DEFAULT_CHAT_MEMORY_CONVERSATION_ID, 5), // CHAT MEMORY
-                            new SimpleLoggerAdvisor()
+                            new MessageChatMemoryAdvisor(chatMemorySupplier().get(), DEFAULT_CHAT_MEMORY_CONVERSATION_ID, 5)
                     )
                     .build();
             chatClientMap.put(key, client);
