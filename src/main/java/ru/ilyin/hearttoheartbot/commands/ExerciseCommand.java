@@ -18,7 +18,7 @@ public class ExerciseCommand implements TelegramCommand {
         return client.prompt()
                 .user(
                         u ->
-                                u.text("Расскажи самое лучшее упражнение для снятия стресса")
+                                u.text("Расскажи упражнение для снятия стресса")
                 )
                 .call()
                 .content();
